@@ -50,8 +50,45 @@
     }).addTo(map);   
     
     var myData;   
+    function onPoint(geoJsonPoint, latlng) {
+
+if (geoJsonPoint.properties.radio == 'GSM') {
+  var smallIcon = new L.Icon({
+    iconSize: [27,27],
+    iconAnchor: [13, 27],
+    popupAnchor: [1, -24],
+    iconUrl: 'icons/GSMtower.png'
+  });
+}
+
+if (geoJsonPoint.properties.radio == 'UMTS') {
+  var smallIcon = new L.Icon({
+    iconSize: [27, 27],
+    iconAnchor: [13, 27],
+    popupAnchor: [1, -24],
+    iconUrl: 'icons/UMTStower.png'
+  });
+}
+
+if (geoJsonPoint.properties.radio == 'LTE') {
+  var smallIcon = new L.Icon({
+    iconSize: [27, 27],
+    iconAnchor: [13, 27],
+    popupAnchor: [1, -24],
+    iconUrl: 'icons/LTEradiotower.png'
+  });
+}
+
+var marker = L.marker(latlng, { icon: smallIcon })
+
+marker.bindPopup("Cellid : " + geoJsonPoint.properties.cell.toString() + "<br/>Latitude : " + geoJsonPoint.properties.lat.toString() + "<br/>Longtitude : " + geoJsonPoint.properties.lat.toString());
+return marker
+}
+
+
     L.uGeoJSONLayer({
-      endpoint: "https://kitsihbboxapi.herokuapp.com/data",     
+      endpoint: "https://kitsihbboxapi.herokuapp.com/data",  
+      pointToLayer: onPoint,   
     }).addTo(map);
 
 
