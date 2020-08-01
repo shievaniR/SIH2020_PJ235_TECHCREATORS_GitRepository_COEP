@@ -6,23 +6,38 @@
   <title>Simple FeatureLayer</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
 
+  <!-- Load Leaflet from CDN -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
     integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
     crossorigin="" />
-  
+  <link rel="stylesheet" href="css/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geosearch/3.0.6/geosearch.css" />
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
     integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
     crossorigin=""></script>
- 
+  <script src="js/leaflet.markercluster.js"></script>
+  <script src="js/Leaflet.Control.Custom.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geosearch/3.0.6/bundle.min.js"></script>
   <script src="js/uGeoJSON.js"></script>
-
+  <script src="js/QuadTree.js"></script>
+  <script src="js/L.TileLayer.MaskCanvas.js"></script>
   <style>
     body {
       margin: 0;
       padding: 0;
     }
 
-    
+    .inputs {
+      -webkit-appearance: none;
+      background-color: #fafafa;
+      border: 1px solid #cacece;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0px -15px 10px -12px rgba(0, 0, 0, 0.05);
+      padding: 9px;
+      border-radius: 3px;
+      display: inline-block;
+      position: relative;
+    }
 
     #map {
       position: absolute;
@@ -47,58 +62,163 @@
     ]);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);   
+    }).addTo(map);
     
-    var myData;   
+    var GeoSearchControl = window.GeoSearch.GeoSearchControl;
+    var OpenStreetMapProvider = window.GeoSearch.OpenStreetMapProvider;
+    var provider = new OpenStreetMapProvider({
+      params: {
+
+        countrycodes: 'in',
+
+      },
+    });
+
+    //  Define search controls
+    var searchControl = new GeoSearchControl({
+      provider: provider,
+      
+      showMarker: true,
+      marker: {
+        draggable: true
+      },
+      autoClose: true,
+      keepResult: true,
+    });
+
+    // Add searchbar to the map
+    map.addControl(searchControl);
+    var clusters = L.markerClusterGroup()
+    var myData;
+
     function onPoint(geoJsonPoint, latlng) {
 
-if (geoJsonPoint.properties.radio == 'GSM') {
-  var smallIcon = new L.Icon({
-    iconSize: [27,27],
-    iconAnchor: [13, 27],
-    popupAnchor: [1, -24],
-    iconUrl: 'icons/GSMtower.png'
-  });
-}
+      if (geoJsonPoint.properties.radio == 'GSM') {
+        var smallIcon = new L.Icon({
+          iconSize: [27,27],
+          iconAnchor: [13, 27],
+          popupAnchor: [1, -24],
+          iconUrl: 'icons/GSMtower.png'
+        });
+      }
 
-if (geoJsonPoint.properties.radio == 'UMTS') {
-  var smallIcon = new L.Icon({
-    iconSize: [27, 27],
-    iconAnchor: [13, 27],
-    popupAnchor: [1, -24],
-    iconUrl: 'icons/UMTStower.png'
-  });
-}
+      if (geoJsonPoint.properties.radio == 'UMTS') {
+        var smallIcon = new L.Icon({
+          iconSize: [27, 27],
+          iconAnchor: [13, 27],
+          popupAnchor: [1, -24],
+          iconUrl: 'icons/UMTStower.png'
+        });
+      }
 
-if (geoJsonPoint.properties.radio == 'LTE') {
-  var smallIcon = new L.Icon({
-    iconSize: [27, 27],
-    iconAnchor: [13, 27],
-    popupAnchor: [1, -24],
-    iconUrl: 'icons/LTEradiotower.png'
-  });
-}
+      if (geoJsonPoint.properties.radio == 'LTE') {
+        var smallIcon = new L.Icon({
+          iconSize: [27, 27],
+          iconAnchor: [13, 27],
+          popupAnchor: [1, -24],
+          iconUrl: 'icons/LTEradiotower.png'
+        });
+      }
 
-var marker = L.marker(latlng, { icon: smallIcon })
+      var marker = L.marker(latlng, { icon: smallIcon })
+      clusters.addLayer(marker);
+      marker.bindPopup("Cellid : " + geoJsonPoint.properties.cell.toString() + "<br/>Latitude : " + geoJsonPoint.properties.lat.toString() + "<br/>Longtitude : " + geoJsonPoint.properties.lat.toString());
 
-marker.bindPopup("Cellid : " + geoJsonPoint.properties.cell.toString() + "<br/>Latitude : " + geoJsonPoint.properties.lat.toString() + "<br/>Longtitude : " + geoJsonPoint.properties.lat.toString());
-return marker
-}
+    }
 
 
+
+
+
+    var afterFetch = function (data) {
+      clusters.clearLayers()
+     
+      myData = data;
+
+    }
+
+
+    function updateCheckboxStates() {
+      checkboxStates = {
+        years: [],
+        eventTypes: []
+      }
+
+      for (let input of document.querySelectorAll('input')) {
+        if (input.checked) {
+          switch (input.className) {
+            case 'event-type': checkboxStates.eventTypes.push(input.value); break
+
+          }
+        }
+      }
+    }
+    let checkboxStates
     L.uGeoJSONLayer({
-      endpoint: "https://kitsihbboxapi.herokuapp.com/data",  
-      pointToLayer: onPoint,   
+      endpoint: "https://kitsihbboxapi.herokuapp.com/data",
+      pointToLayer: onPoint,
+      afterFetch,
+      filter: (feature) => {
+        const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.radio)
+        return isEventTypeChecked
+      }
     }).addTo(map);
 
 
 
 
     map.addLayer(clusters);
-  
+    L.control.custom({
+      position: 'topright',
+      content: '<div class="inputs" id="event-types">' +
+        '<input type="checkbox" class="event-type" name="GSM" value="GSM" checked="true">' +
+        '<label for="funfair">GSM</label>' +
+        '<input type="checkbox" class="event-type" name="LTE" value="LTE" checked="true">' +
+        '<label for="trade">LTE</label>' +
+        '<input type="checkbox" class="event-type" name="UMTS" value="UMTS" checked="true">' +
+        '<label for="trade">UMTS</label>' +
+        '</div>',
 
-  
-  
+      style:
+      {
+        margin: '15px',
+        padding: '0px 0 0 0',
+        cursor: 'pointer',
+      },
+      events:
+      {
+        click: function (data) {
+          for (let input of document.querySelectorAll('input')) {
+            //Listen to 'change' event of all inputs
+            input.onchange = (e) => {
+              clusters.clearLayers()
+              updateCheckboxStates()
+              //  clusters.addData(myData) 
+              var a = L.geoJSON(myData, {
+                pointToLayer: onPoint,
+                filter: (feature) => {
+                  const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.radio)
+                  return isEventTypeChecked
+                }
+              }).addTo(map);
+              map.addLayer(clusters);
+            }
+
+
+
+          }
+
+
+        },
+      }
+    })
+      .addTo(map)
+
+    updateCheckboxStates();
+
+    map.on('geosearch/showlocation', () => {
+      console.log("geosearch location")
+    });
 
 
   </script>
