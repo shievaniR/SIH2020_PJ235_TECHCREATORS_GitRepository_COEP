@@ -77,7 +77,13 @@
       map.setView([latit, longit], 17);
       var di = new L.LatLng(latit, longit);
       var drag = new L.LatLng(latit + 0.001000000000000000, longit + 0.001000000000000000);
-      var A = L.marker(di, { draggable: true }).bindTooltip('Hi There!').addTo(map);
+      var geoIcon = new L.Icon({
+              iconSize: [37, 37],
+              iconAnchor: [13, 27],
+              popupAnchor: [1, -24],
+              iconUrl: 'icons/geo.png'
+            });
+      var A = L.marker(di, { draggable: true,icon: geoIcon }).bindTooltip('Hi There!').addTo(map);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
