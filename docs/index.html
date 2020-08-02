@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>SIH2020_PJ235_TECHCREATORS_GitRepository_COEP</title>
+  <title>Simple FeatureLayer</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
 
   <!-- Load Leaflet from CDN -->
@@ -17,11 +17,9 @@
     crossorigin=""></script>
   <script src="js/leaflet.markercluster.js"></script>
   <script src="js/Leaflet.Control.Custom.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geosearch/3.0.6/bundle.min.js"></script>
-  <script src="js/uGeoJSON.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet.geodesic"></script>
- 
   <style>
     body {
       margin: 0;
@@ -46,21 +44,6 @@
       right: 0;
       left: 0;
     }
-
-    .info {
-            padding: 6px 8px;
-            font: 14px/16px Arial, Helvetica, sans-serif;
-            background: white;
-            background: rgba(255, 255, 255, 0.8);
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            border-radius: 5px;
-        }
-
-        .info h4 {
-            margin: 0 0 5px;
-            font: 22px/24px Arial, Helvetica, sans-serif;
-            color: #777;
-        }
   </style>
 </head>
 
@@ -69,261 +52,264 @@
   <div id="map"> </div>
 
   <script>
-
-   
-
     if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(function(position) {
-    console.log('--- Your Position: ---');
-    console.log('Lat: ' + position.coords.latitude);
-    latit = position.coords.latitude;
-    console.log('Long: ' + position.coords.longitude);
-    longit = position.coords.longitude;
-    console.log('---------------------');
-    addmap()
-  })
-}
-function addmap(){
+      navigator.geolocation.getCurrentPosition(function (position) {
+        console.log('--- Your Position: ---');
+        console.log('Lat: ' + position.coords.latitude);
+        latit = position.coords.latitude;
+        console.log('Long: ' + position.coords.longitude);
+        longit = position.coords.longitude;
+        console.log('---------------------');
 
-  var map = L.map('map');
-   /* map.fitBounds([
-      [28.798466742681587, 76.11983078002931],
-      [28.808466742681587, 76.12983078002911]
-    ]);*/
-    console.log('Lat: ' + latit);
-    map.setView([latit, longit],16);
-    var di = new L.LatLng(latit, longit);
-    var drag = new L.LatLng(latit+0.001000000000000000,longit+0.001000000000000000);
-    var A = L.marker(di, { draggable: true }).bindTooltip('Hi There!').addTo(map);
-    var B = L.marker(drag, { draggable: true }).bindTooltip('Hi There!').addTo(map).bindPopup("Drag me.").openPopup();
+        addmap(latit, longit)
+
+      })
+    }
+    function addmap(latit, longit) {
+
+      var map = L.map('map');
+      map.setZoom(18)
+      /* map.fitBounds([
+         [28.798466742681587, 76.11983078002931],
+         [28.808466742681587, 76.12983078002911]
+       ]);*/
+      console.log('Lat: ' + latit);
+      map.setView([latit, longit], 17);
+      var di = new L.LatLng(latit, longit);
+      var drag = new L.LatLng(latit + 0.001000000000000000, longit + 0.001000000000000000);
+      var A = L.marker(di, { draggable: true }).bindTooltip('Hi There!').addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      var GeoSearchControl = window.GeoSearch.GeoSearchControl;
+      var OpenStreetMapProvider = window.GeoSearch.OpenStreetMapProvider;
+      var provider = new OpenStreetMapProvider({
+        params: {
+          countrycodes: 'in',
+        },
+      });
+
+      //  Define search controls
+      var searchControl = new GeoSearchControl({
+        provider: provider,
+        retainZoomLevel: true,
+        showMarker: true,
+        marker: {
+          draggable: true
+        },
+        autoClose: true,
+        keepResult: true,
+      });
+
+      // Add searchbar to the map
+      map.addControl(searchControl);
+   //   var clusters = L.markerClusterGroup()
+      var myData;
+
+      function onPoint(geoJsonPoint, latlng) {
+        console.log("pomt")
+
+
+        /*  if (geoJsonPoint.properties.Sitetype == 'GBM') {
+            console.log("eee")
+            var smallIcon = new L.Icon({
+              iconSize: [27, 27],
+              iconAnchor: [13, 27],
+              popupAnchor: [1, -24],
+              iconUrl: 'icons/GSMtower.png'
+            });
+          }
     
-    const geodesiccircle = new L.GeodesicCircle(A.getLatLng(), {
-            weight: 7,
-            opacity: 0.5,
-            color: 'red',
-            fill: true,
-            steps: 80
+          if (geoJsonPoint.properties.Sitetype == 'GBT') {
+            var smallIcon = new L.Icon({
+              iconSize: [27, 27],
+              iconAnchor: [13, 27],
+              popupAnchor: [1, -24],
+              iconUrl: 'icons/UMTStower.png'
+            });
+          }
+    
+          if (geoJsonPoint.properties.Sitetype == 'RTP') {
+            var smallIcon = new L.Icon({
+              iconSize: [27, 27],
+              iconAnchor: [13, 27],
+              popupAnchor: [1, -24],
+              iconUrl: 'icons/LTEradiotower.png'
+            });
+          } else {
+    
+            var smallIcon = new L.Icon({
+              iconSize: [27, 27],
+              iconAnchor: [13, 27],
+              popupAnchor: [1, -24],
+              iconUrl: 'icons/LTEradiotower.png'
+            });
+    
+          }*/
+
+        // var marker = L.marker(latlng, { icon: smallIcon })
+        var marker = L.marker(latlng)
+     
+        if (geoJsonPoint.properties.Sitetype == 'GBM' || geoJsonPoint.properties.Sitetype == 'LPBTS') {
+          const geodesiccircle = new L.GeodesicCircle(latlng, {
+          radius: 1*1000,  // 3000km in meters
         }).addTo(map);
+        }
 
-        geodesiccircle.setRadius(geodesiccircle.distanceTo(B.getLatLng()));
-        var info = L.control();
-        info.onAdd = function (map) {
-            this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
-            return this._div;
-        };
-        info.addTo(map);
+        if (geoJsonPoint.properties.Sitetype == 'COW(GBT)' || geoJsonPoint.properties.Sitetype == 'RTP' || geoJsonPoint.properties.Sitetype == 'Wall mount') {
+          const geodesiccircle = new L.GeodesicCircle(latlng, {
+          radius: 2*1000,  // 3000km in meters
+        }).addTo(map);
+        }
 
-        info.update = function (stats) {
-            const circumfenceString = (stats.totalDistance ? (stats.totalDistance > 10000) ? (stats.totalDistance / 1000).toFixed(0) + ' km' : (stats.totalDistance).toFixed(0) + ' m' : 'invalid')
-            const radiusString = (geodesiccircle.radius ? (geodesiccircle.radius > 10000) ? (geodesiccircle.radius / 1000).toFixed(0) + ' km' : (geodesiccircle.radius).toFixed(0) + ' m' : 'invalid')
-            this._div.innerHTML = '<h4>Distance</h4><b>Radius</b><br/>' + radiusString +
-                '<br/><br/><b>Circumfence</b><br/>' + circumfenceString +
-                '<br/><br/><b>Vertices</b><br/>' + stats.vertices;
-        };
+        if (geoJsonPoint.properties.Sitetype == 'GBT') {
+          const geodesiccircle = new L.GeodesicCircle(latlng, {
+          radius: 4*1000,  // 3000km in meters
+        }).addTo(map);
+        }
 
-        info.update(geodesiccircle.statistics);
+        if (geoJsonPoint.properties.Sitetype == 'LPBTS') {
+          const geodesiccircle = new L.GeodesicCircle(latlng, {
+          radius: 1*1000,  // 3000km in meters
+        }).addTo(map);
+        }
 
-        var diff = { lat: 0, lng: 0 };
-        A.on('dragstart', function () {
-            diff = { lat: A.getLatLng().lat - B.getLatLng().lat, lng: A.getLatLng().lng - B.getLatLng().lng };	// remember difference between A and B
-        });
+        if (geoJsonPoint.properties.Sitetype == 'RTT') {
+          const geodesiccircle = new L.GeodesicCircle(latlng, {
+          radius: 3*1000,  // 3000km in meters
+        }).addTo(map);
+        }
 
-        A.on('drag', (e) => {
-            A.setTooltipContent(`${Math.round(10000 * e.latlng.lat) / 10000} ${Math.round(10000 * e.latlng.lng) / 10000}`);
-            B.setLatLng({
-                lat: Math.max(-90, Math.min(90, A.getLatLng().lat - diff.lat)),
-                lng: A.getLatLng().lng - diff.lng
-            });	// move B parallel to A            
-
-            const radius = geodesiccircle.geom.distance(e.latlng, B.getLatLng());
-            geodesiccircle.setLatLng(e.latlng, radius);
-            info.update(geodesiccircle.statistics);
-        });
-        B.on('drag', (e) => {
-            B.setTooltipContent(`${Math.round(10000 * e.latlng.lat) / 10000} ${Math.round(10000 * e.latlng.lng) / 10000}`);
-            geodesiccircle.setRadius(geodesiccircle.distanceTo(e.latlng));
-            info.update(geodesiccircle.statistics);
-        });
-
-    
-    
-    
-    
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-    
-
-
-    var GeoSearchControl = window.GeoSearch.GeoSearchControl;
-    var OpenStreetMapProvider = window.GeoSearch.OpenStreetMapProvider;
-    var provider = new OpenStreetMapProvider({
-      params: {
-
-        countrycodes: 'in',
-
-      },
-    });
-
-    //  Define search controls
-    var searchControl = new GeoSearchControl({
-      provider: provider,
-      
-      showMarker: true,
-      marker: {
-        draggable: true
-      },
-      autoClose: true,
-      keepResult: true,
-    });
-
-    // Add searchbar to the map
-    map.addControl(searchControl);
-    var clusters = L.markerClusterGroup()
-    var myData;
-
-    function onPoint(geoJsonPoint, latlng) {
-     console.log(geoJsonPoint.properties)
-      if (geoJsonPoint.properties.Sitetype == 'RTT') {
-        var smallIcon = new L.Icon({
-          iconSize: [27,27],
-          iconAnchor: [13, 27],
-          popupAnchor: [1, -24],
-          iconUrl: 'icons/GSMtower.png'
-        });
+        
+        marker.bindPopup("LSA : " + geoJsonPoint.properties.LSA + "<br/>SiteType : " + geoJsonPoint.properties.Sitetype + "<br/>District : " + geoJsonPoint.properties.District);
+        //clusters.addLayer(marker);
+        return marker;
       }
 
-      if (geoJsonPoint.properties.Sitetype == 'RTP') {
-        var smallIcon = new L.Icon({
-          iconSize: [27, 27],
-          iconAnchor: [13, 27],
-          popupAnchor: [1, -24],
-          iconUrl: 'icons/UMTStower.png'
-        });
-      }
-
-      if (geoJsonPoint.properties.Sitetype == 'GBM') {
-        var smallIcon = new L.Icon({
-          iconSize: [27, 27],
-          iconAnchor: [13, 27],
-          popupAnchor: [1, -24],
-          iconUrl: 'icons/LTEradiotower.png'
-        });
-      }else{
-        var smallIcon = new L.Icon({
-          iconSize: [27, 27],
-          iconAnchor: [13, 27],
-          popupAnchor: [1, -24],
-          iconUrl: 'icons/LTEradiotower.png'
-        });
-      }
-
-      var marker = L.marker(latlng, { icon: smallIcon })
-      clusters.addLayer(marker);
-      marker.bindPopup("LSA : " + geoJsonPoint.properties.LSA + "<br/>SiteType : " + geoJsonPoint.properties.Sitetype + "<br/>District : " + geoJsonPoint.properties.District);
-
-    }
 
 
 
 
-
-    var afterFetch = function (data) {
-    //  console.log(data)
-   
-      clusters.clearLayers()    
-      myData = data;
-
-    }
+      /*  var afterFetch = function (data) {
+          clusters.clearLayers()
+         
+          myData = data;
+    
+        }*/
 
 
-    function updateCheckboxStates() {
-      checkboxStates = {
-        years: [],
-        eventTypes: []
-      }
+      function updateCheckboxStates() {
+        checkboxStates = {
+          years: [],
+          eventTypes: []
+        }
 
-      for (let input of document.querySelectorAll('input')) {
-        if (input.checked) {
-          switch (input.className) {
-            case 'event-type': checkboxStates.eventTypes.push(input.value); break
+        for (let input of document.querySelectorAll('input')) {
+          if (input.checked) {
+            switch (input.className) {
+              case 'event-type': checkboxStates.eventTypes.push(input.value); break
 
+            }
           }
         }
       }
-    }
-    let checkboxStates
-    L.uGeoJSONLayer({
-      endpoint: "https://kitsihbboxapi.herokuapp.com/data",
-      pointToLayer: onPoint,
-      afterFetch,
-      filter: (feature) => {
-        const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.Sitetype)
-        return isEventTypeChecked
-      }
-     
-    }).addTo(map);
+      let checkboxStates
+
+      $.getJSON("https://kitsihbboxapi.herokuapp.com/?lat=" + latit + "&&long=" + longit, function (data) {
+        // Define the geojson layer and add it to the map
+        myData = data;
+        console.log(myData)
+        L.geoJSON(data, {
+          pointToLayer: onPoint,
+          filter: (feature) => {
+            const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.Sitetype)
+            return isEventTypeChecked
+          }
+        }).addTo(map);
+      });
 
 
 
 
-    map.addLayer(clusters);
-    
-    L.control.custom({
-      position: 'topright',
-      content: '<div class="inputs" id="event-types">' +
-        '<input type="checkbox" class="event-type" name="RTT" value="RTT" checked="true">' +
-        '<label for="funfair">RTT</label>' +
-        '<input type="checkbox" class="event-type" name="RTP" value="RTP" checked="true">' +
-        '<label for="trade">RTP</label>' +
-        '<input type="checkbox" class="event-type" name="GBM" value="GBM" checked="true">' +
-        '<label for="trade">GBM</label>' +
-        '</div>',
 
-      style:
-      {
-        margin: '15px',
-        padding: '0px 0 0 0',
-        cursor: 'pointer',
-      },
-      events:
-      {
-        click: function (data) {
-          for (let input of document.querySelectorAll('input')) {
-            //Listen to 'change' event of all inputs
-            input.onchange = (e) => {
-              clusters.clearLayers()
-              updateCheckboxStates()
-              //  clusters.addData(myData) 
-              var a = L.geoJSON(myData, {
-                pointToLayer: onPoint,
-                filter: (feature) => {
-                  const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.Sitetype)
-                  return isEventTypeChecked
-                }
-              }).addTo(map);
-              map.addLayer(clusters);
+ //     map.addLayer(clusters);
+      L.control.custom({
+        position: 'topright',
+        content: '<div class="inputs" id="event-types">' +
+          '<input type="checkbox" class="event-type" name="GBM" value="GBM" checked="true">' +
+          '<label for="funfair">GBM</label>' +
+          '<input type="checkbox" class="event-type" name="GBT" value="GBT" checked="true">' +
+          '<label for="trade">GBT</label>' +
+          '<input type="checkbox" class="event-type" name="RTP" value="RTP" checked="true">' +
+          '<label for="trade">RTP</label>' +
+          '<input type="checkbox" class="event-type" name="RTT" value="RTT" checked="true">' +
+          '<label for="trade">RTT</label>' +
+          '<input type="checkbox" class="event-type" name="LPBTS" value="LPBTS" checked="true">' +
+          '<label for="trade">LPBTS</label>' +
+          '</div>',
+
+        style:
+        {
+          margin: '15px',
+          padding: '0px 0 0 0',
+          cursor: 'pointer',
+        },
+        events:
+        {
+          click: function (data) {
+            for (let input of document.querySelectorAll('input')) {
+              //Listen to 'change' event of all inputs
+              input.onchange = (e) => {
+               // clusters.clearLayers()
+                updateCheckboxStates()
+                //  clusters.addData(myData) 
+                var a = L.geoJSON(myData, {
+                  pointToLayer: onPoint,
+                  filter: (feature) => {
+                    const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.Sitetype)
+                    return isEventTypeChecked
+                  }
+                }).addTo(map);
+              //  map.addLayer(clusters);
+              }
+
+
+
             }
 
 
+          },
+        }
+      })
+        .addTo(map)
 
-          }
+      updateCheckboxStates();
+
+      map.on('geosearch/showlocation', (result) => {
+        console.log("geosearch location")
+        console.log(result.location.x)
+   //     clusters.clearLayers();
+        map.setView([result.location.y, result.location.x], 17);
+        $.getJSON("https://kitsihbboxapi.herokuapp.com/?lat=" + result.location.y + "&&long=" + result.location.x, function (data) {
+          // Define the geojson layer and add it to the map
+          myData = data;
+          console.log(myData)
+          L.geoJSON(data, {
+            pointToLayer: onPoint,
+            filter: (feature) => {
+              const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.Sitetype)
+              return isEventTypeChecked
+            }
+          }).addTo(map);
+        });
+
+      //  map.addLayer(clusters);
+      });
 
 
-        },
-      }
-    })
-      .addTo(map)
+    }
 
-    updateCheckboxStates();
-
-    map.on('geosearch/showlocation', () => {
-      console.log("geosearch location")
-    });
-
-
-}
   </script>
 
 </body>
