@@ -105,6 +105,7 @@
       // Add searchbar to the map
       map.addControl(searchControl);
    //   var clusters = L.markerClusterGroup()
+   let coverage = L.layerGroup()
       var myData;
 
       function onPoint(geoJsonPoint, latlng) {
@@ -154,31 +155,36 @@
         if (geoJsonPoint.properties.Sitetype == 'GBM' || geoJsonPoint.properties.Sitetype == 'LPBTS') {
           const geodesiccircle = new L.GeodesicCircle(latlng, {
           radius: 1*1000,  // 3000km in meters
-        }).addTo(map);
+        });
+        coverage.addLayer(geodesiccircle)
         }
 
         if (geoJsonPoint.properties.Sitetype == 'COW(GBT)' || geoJsonPoint.properties.Sitetype == 'RTP' || geoJsonPoint.properties.Sitetype == 'Wall mount') {
           const geodesiccircle = new L.GeodesicCircle(latlng, {
           radius: 2*1000,  // 3000km in meters
-        }).addTo(map);
+        });
+        coverage.addLayer(geodesiccircle)
         }
 
         if (geoJsonPoint.properties.Sitetype == 'GBT') {
           const geodesiccircle = new L.GeodesicCircle(latlng, {
           radius: 4*1000,  // 3000km in meters
-        }).addTo(map);
+        });
+        coverage.addLayer(geodesiccircle)
         }
 
         if (geoJsonPoint.properties.Sitetype == 'LPBTS') {
           const geodesiccircle = new L.GeodesicCircle(latlng, {
           radius: 1*1000,  // 3000km in meters
-        }).addTo(map);
+        });
+        coverage.addLayer(geodesiccircle)
         }
 
         if (geoJsonPoint.properties.Sitetype == 'RTT') {
           const geodesiccircle = new L.GeodesicCircle(latlng, {
           radius: 3*1000,  // 3000km in meters
-        }).addTo(map);
+        });
+        coverage.addLayer(geodesiccircle)
         }
 
         
@@ -228,10 +234,45 @@
           }
         }).addTo(map);
       });
+      var button=0;
+      
+      L.control.custom({
+    position: 'topright',
+    content: '<div class="inputs" id="event-types">' +
+      '<button type="button">Coverage</button>'+
+      '</div>',
+      style   :
+    {
+        margin: '10px',
+        padding: '0px 0 0 0',
+        cursor: 'pointer',
+    },
+    datas   :
+    {
+        'foo': 'bar',
+    },
+    events:
+    {
+        click: function(data)
+        {
+          console.log("function called")
+          console.log(button)
+          if(button==0)
+          {
+           
+            coverage.addTo(map)
+            button=1;
+          }else
+          {
+            map.removeLayer(coverage)
+            button=0
+          }
+          
 
-
-
-
+        }
+    }
+  
+  }).addTo(map);
 
  //     map.addLayer(clusters);
       L.control.custom({
@@ -262,8 +303,14 @@
               //Listen to 'change' event of all inputs
               input.onchange = (e) => {
                // clusters.clearLayers()
+               map.eachLayer(function(layer) {
+  if (!!layer.toGeoJSON) {
+    map.removeLayer(layer);
+  }
+});
                 updateCheckboxStates()
                 //  clusters.addData(myData) 
+              
                 var a = L.geoJSON(myData, {
                   pointToLayer: onPoint,
                   filter: (feature) => {
