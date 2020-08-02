@@ -122,7 +122,7 @@
 
       var marker = L.marker(latlng, { icon: smallIcon })
       clusters.addLayer(marker);
-      marker.bindPopup("Cellid : " + geoJsonPoint.properties.cell.toString() + "<br/>Latitude : " + geoJsonPoint.properties.lat.toString() + "<br/>Longtitude : " + geoJsonPoint.properties.lat.toString());
+      marker.bindPopup("Cellid : " + geoJsonPoint.properties.cell.toString() + "<br/>Latitude : " + geoJsonPoint.properties.lat.toString() + "<br/>Longtitude : " + geoJsonPoint.properties.long.toString());
 
     }
 
