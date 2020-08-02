@@ -184,7 +184,7 @@ function addmap(){
     }
     let checkboxStates
     L.uGeoJSONLayer({
-      endpoint: "http://localhost:5000/data",
+      endpoint: "https://kitsihbboxapi.herokuapp.com/data",
       pointToLayer: onPoint,
       afterFetch,
       filter: (feature) => {
