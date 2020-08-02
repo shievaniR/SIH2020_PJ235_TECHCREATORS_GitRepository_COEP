@@ -216,7 +216,7 @@
       }
       let checkboxStates
 
-      $.getJSON("https://kitsihbboxapi.herokuapp.com/?lat=" + latit + "&&long=" + longit, function (data) {
+      $.getJSON("https://kitsihbboxapi.herokuapp.com/data?lat=" + latit + "&&long=" + longit, function (data) {
         // Define the geojson layer and add it to the map
         myData = data;
         console.log(myData)
@@ -291,7 +291,7 @@
         console.log(result.location.x)
    //     clusters.clearLayers();
         map.setView([result.location.y, result.location.x], 17);
-        $.getJSON("https://kitsihbboxapi.herokuapp.com/?lat=" + result.location.y + "&&long=" + result.location.x, function (data) {
+        $.getJSON("https://kitsihbboxapi.herokuapp.com/data?lat=" + result.location.y + "&&long=" + result.location.x, function (data) {
           // Define the geojson layer and add it to the map
           myData = data;
           console.log(myData)
