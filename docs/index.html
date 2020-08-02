@@ -20,8 +20,8 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geosearch/3.0.6/bundle.min.js"></script>
   <script src="js/uGeoJSON.js"></script>
-  <script src="js/QuadTree.js"></script>
-  <script src="js/L.TileLayer.MaskCanvas.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet.geodesic"></script>
+ 
   <style>
     body {
       margin: 0;
@@ -55,15 +55,36 @@
 
   <script>
 
-    var map = L.map('map');
-    map.fitBounds([
-      [10.998466742681587, 76.95983078002931],
-      [11.013824045772019, 76.99802398681642]
-    ]);
+   
+
+    if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(function(position) {
+    console.log('--- Your Position: ---');
+    console.log('Lat: ' + position.coords.latitude);
+    latit = position.coords.latitude;
+    console.log('Long: ' + position.coords.longitude);
+    longit = position.coords.longitude;
+    console.log('---------------------');
+    addmap()
+  })
+}
+function addmap(){
+
+  var map = L.map('map');
+   /* map.fitBounds([
+      [28.798466742681587, 76.11983078002931],
+      [28.808466742681587, 76.12983078002911]
+    ]);*/
+    console.log('Lat: ' + latit);
+    map.setView([latit, longit],16);
+    const di = new L.LatLng(latit, longit);
+    L.marker([latit, longit]).addTo(map).bindTooltip('Hi There!').addTo(map);;
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
     
+
+
     var GeoSearchControl = window.GeoSearch.GeoSearchControl;
     var OpenStreetMapProvider = window.GeoSearch.OpenStreetMapProvider;
     var provider = new OpenStreetMapProvider({
@@ -92,8 +113,8 @@
     var myData;
 
     function onPoint(geoJsonPoint, latlng) {
-
-      if (geoJsonPoint.properties.radio == 'GSM') {
+     console.log(geoJsonPoint.properties)
+      if (geoJsonPoint.properties.Sitetype == 'RTT') {
         var smallIcon = new L.Icon({
           iconSize: [27,27],
           iconAnchor: [13, 27],
@@ -102,7 +123,7 @@
         });
       }
 
-      if (geoJsonPoint.properties.radio == 'UMTS') {
+      if (geoJsonPoint.properties.Sitetype == 'RTP') {
         var smallIcon = new L.Icon({
           iconSize: [27, 27],
           iconAnchor: [13, 27],
@@ -111,7 +132,14 @@
         });
       }
 
-      if (geoJsonPoint.properties.radio == 'LTE') {
+      if (geoJsonPoint.properties.Sitetype == 'GBM') {
+        var smallIcon = new L.Icon({
+          iconSize: [27, 27],
+          iconAnchor: [13, 27],
+          popupAnchor: [1, -24],
+          iconUrl: 'icons/LTEradiotower.png'
+        });
+      }else{
         var smallIcon = new L.Icon({
           iconSize: [27, 27],
           iconAnchor: [13, 27],
@@ -122,7 +150,7 @@
 
       var marker = L.marker(latlng, { icon: smallIcon })
       clusters.addLayer(marker);
-      marker.bindPopup("Cellid : " + geoJsonPoint.properties.cell.toString() + "<br/>Latitude : " + geoJsonPoint.properties.lat.toString() + "<br/>Longtitude : " + geoJsonPoint.properties.long.toString());
+      marker.bindPopup("LSA : " + geoJsonPoint.properties.LSA + "<br/>SiteType : " + geoJsonPoint.properties.Sitetype + "<br/>District : " + geoJsonPoint.properties.District);
 
     }
 
@@ -131,8 +159,9 @@
 
 
     var afterFetch = function (data) {
-      clusters.clearLayers()
-     
+    //  console.log(data)
+   
+      clusters.clearLayers()    
       myData = data;
 
     }
@@ -155,28 +184,30 @@
     }
     let checkboxStates
     L.uGeoJSONLayer({
-      endpoint: "https://kitsihbboxapi.herokuapp.com/data",
+      endpoint: "http://localhost:5000/data",
       pointToLayer: onPoint,
       afterFetch,
       filter: (feature) => {
-        const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.radio)
+        const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.Sitetype)
         return isEventTypeChecked
       }
+     
     }).addTo(map);
 
 
 
 
     map.addLayer(clusters);
+    const geodesic = new L.GeodesicCircle(di,{radius: .25*1000}).addTo(map);
     L.control.custom({
       position: 'topright',
       content: '<div class="inputs" id="event-types">' +
-        '<input type="checkbox" class="event-type" name="GSM" value="GSM" checked="true">' +
-        '<label for="funfair">GSM</label>' +
-        '<input type="checkbox" class="event-type" name="LTE" value="LTE" checked="true">' +
-        '<label for="trade">LTE</label>' +
-        '<input type="checkbox" class="event-type" name="UMTS" value="UMTS" checked="true">' +
-        '<label for="trade">UMTS</label>' +
+        '<input type="checkbox" class="event-type" name="RTT" value="RTT" checked="true">' +
+        '<label for="funfair">RTT</label>' +
+        '<input type="checkbox" class="event-type" name="RTP" value="RTP" checked="true">' +
+        '<label for="trade">RTP</label>' +
+        '<input type="checkbox" class="event-type" name="GBM" value="GBM" checked="true">' +
+        '<label for="trade">GBM</label>' +
         '</div>',
 
       style:
@@ -197,7 +228,7 @@
               var a = L.geoJSON(myData, {
                 pointToLayer: onPoint,
                 filter: (feature) => {
-                  const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.radio)
+                  const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.Sitetype)
                   return isEventTypeChecked
                 }
               }).addTo(map);
@@ -221,6 +252,7 @@
     });
 
 
+}
   </script>
 
 </body>
