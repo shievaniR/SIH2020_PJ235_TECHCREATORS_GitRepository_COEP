@@ -30,7 +30,7 @@ client.connect();
 app.get('/', (req, res) => res.send('BBox API Developed by Karpagam Institue of Technology for SIH 2020'))
 
 
-app.get('/data', function (req, res) {
+app.post('/data', function (req, res) {
    
     
  /*   if (!req.body.west && !req.body.south && !req.body.east && !req.body.north)
@@ -39,12 +39,12 @@ app.get('/data', function (req, res) {
         return;
     }*/
 
-    if(!req.query.long && !req.query.lat){
+    if(!req.query.long && !req.query.lat && !req.query.limit){
         res.send('Send Lat and long')
         return;
     }
 
-    var tower_query = "SELECT json_build_object('type', 'FeatureCollection','crs',  json_build_object('type','name','properties', json_build_object('name','EPSG:4326')),'features', json_agg(json_build_object('type','Feature','geometry',ST_AsGeoJSON(geom)::json,'properties', json_build_object('LSA',lsa,'District',district,'latitude',latitude,'longitude',longitude,'Sitetype', sitetype)))) FROM (select * from btowers ORDER BY geom <->'SRID=4326;POINT("+req.query.long+" "+req.query.lat+")'::geometry LIMIT 5) as InnerQuery";
+    var tower_query = "SELECT json_build_object('type', 'FeatureCollection','crs',  json_build_object('type','name','properties', json_build_object('name','EPSG:4326')),'features', json_agg(json_build_object('type','Feature','geometry',ST_AsGeoJSON(geom)::json,'properties', json_build_object('LSA',lsa,'District',district,'latitude',latitude,'longitude',longitude,'Sitetype', sitetype)))) FROM (select * from btowers ORDER BY geom <->'SRID=4326;POINT("+req.query.long+" "+req.query.lat+")'::geometry LIMIT "+req.query.limit+") as InnerQuery";
     var query = client.query(new Query(tower_query));
     query.on("row", function (row, result) {
         result.addRow(row);
@@ -55,6 +55,32 @@ app.get('/data', function (req, res) {
         res.end();
     });
   });
+
+  app.get('/data', function (req, res) {
+   
+    
+    /*   if (!req.body.west && !req.body.south && !req.body.east && !req.body.north)
+       {
+           res.send('Send BBOX xmin, ymin, xmax, ymax')
+           return;
+       }*/
+   
+       if(!req.query.long && !req.query.lat && !req.query.limit){
+           res.send('Send Lat and long')
+           return;
+       }
+   
+       var tower_query = "SELECT json_build_object('type', 'FeatureCollection','crs',  json_build_object('type','name','properties', json_build_object('name','EPSG:4326')),'features', json_agg(json_build_object('type','Feature','geometry',ST_AsGeoJSON(geom)::json,'properties', json_build_object('LSA',lsa,'District',district,'latitude',latitude,'longitude',longitude,'Sitetype', sitetype)))) FROM (select * from btowers ORDER BY geom <->'SRID=4326;POINT("+req.query.long+" "+req.query.lat+")'::geometry LIMIT "+req.query.limit+") as InnerQuery";
+       var query = client.query(new Query(tower_query));
+       query.on("row", function (row, result) {
+           result.addRow(row);
+       });
+       query.on("end", function (result) {
+         // console.log(JSON.stringify(result.rows[0]))
+           res.send(JSON.stringify(result.rows[0].json_build_object));       
+           res.end();
+       });
+     });
 
 
   
