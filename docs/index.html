@@ -125,7 +125,8 @@
       map.addControl(searchControl);
 
       map.on('geosearch/showlocation', (result) => {
-
+        towercount=0;
+        t="LSA       District        Sitetype";
         di = new L.LatLng(result.location.y, result.location.x);
         map.setView(di, 15);
         GBM.clearLayers();
@@ -269,21 +270,72 @@
       var nearest = L.layerGroup()
 
       var towercount = 0;
+      var t="LSA       District        Sitetype";
       function onPoint1(geoJsonPoint, latlng) {
 
-        console.log("On point 1")
-        var smallIcon = new L.Icon({
+       
+        t=t+"\n"+geoJsonPoint.properties.LSA+"     "+geoJsonPoint.properties.District+"     "+geoJsonPoint.properties.Sitetype;
+        
+        if(towercount==0)
+        {
+          var smallIcon = new L.Icon({
           iconSize: [27, 27],
           iconAnchor: [13, 27],
           popupAnchor: [1, -24],
-          iconUrl: 'icons/geo.png'
+          iconUrl: 'icons/one.png'
         })
+        towercount++
+        }
+
+        else if(towercount==1)
+        {
+          var smallIcon = new L.Icon({
+          iconSize: [27, 27],
+          iconAnchor: [13, 27],
+          popupAnchor: [1, -24],
+          iconUrl: 'icons/two.png'
+        })
+        towercount++
+        }
+
+        else if(towercount==2)
+        {
+          var smallIcon = new L.Icon({
+          iconSize: [27, 27],
+          iconAnchor: [13, 27],
+          popupAnchor: [1, -24],
+          iconUrl: 'icons/three.png'
+        })
+        towercount++
+        }
+
+        else if(towercount==3)
+        {
+          var smallIcon = new L.Icon({
+          iconSize: [27, 27],
+          iconAnchor: [13, 27],
+          popupAnchor: [1, -24],
+          iconUrl: 'icons/four.png'
+        })
+        towercount++
+        }
+        else if(towercount==4)
+        {
+          var smallIcon = new L.Icon({
+          iconSize: [27, 27],
+          iconAnchor: [13, 27],
+          popupAnchor: [1, -24],
+          iconUrl: 'icons/five.png'
+        })
+        towercount++
+        }
+       
 
         var marker = L.marker(latlng, { icon: smallIcon })
         nearest.addLayer(marker)
 
 
-
+     
 
 
 
@@ -381,7 +433,7 @@
       L.control.custom({
         position: 'topright',
         content: '<div class="inputs" id="event-types">' +
-          '<button type="button">Coverage</button>' +
+          '<button type="button" id="coverage">Coverage</button>' +
           '</div>',
         style:
         {
@@ -396,10 +448,12 @@
         events:
         {
           click: function (data) {
+            
             console.log("function called")
             console.log(button)
             if (button == 0) {
-
+              alert(t)
+              $("#coverage").html("Don't show coverage");
               GBM.addTo(map)
               LPBTS.addTo(map)
               COWGBT.addTo(map)
@@ -410,6 +464,7 @@
 
               button = 1;
             } else {
+              $("#coverage").html("Coverage");
               map.removeLayer(GBM)
               map.removeLayer(LPBTS)
               map.removeLayer(COWGBT)
@@ -495,6 +550,8 @@
 
 
       function onMapClick(e) {
+        towercount=0;
+        t="LSA       District        Sitetype";
         GBM.clearLayers();
         RTP.clearLayers();
         LPBTS.clearLayers();
@@ -511,12 +568,14 @@
             pointToLayer: onPoint1,
           })
         })
-
+        centerpoint.on('dragend', onDrag);
       }
 
 
       function onDrag(e) {
         console.log("calling drag")
+        towercount=0;
+        t="LSA       District        Sitetype";
         GBM.clearLayers();
         RTP.clearLayers();
         LPBTS.clearLayers();
