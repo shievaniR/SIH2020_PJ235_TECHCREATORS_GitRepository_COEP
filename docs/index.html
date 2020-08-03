@@ -142,7 +142,7 @@
         clusters.clearLayers();
         centerpoint.addTo(map)
         L.uGeoJSONLayer({
-          endpoint: "http://kitsihbboxapi.herokuapp.com/data?lat=" + result.location.y + "&&long=" + result.location.x + "&&limit=500",
+          endpoint: "https://kitsihbboxapi.herokuapp.com/data?lat=" + result.location.y + "&&long=" + result.location.x + "&&limit=500",
           pointToLayer: onPoint,
           afterFetch,
           minZoom: 40,
@@ -248,7 +248,7 @@
 
       console.log("in get data")
       L.uGeoJSONLayer({
-        endpoint: "http://kitsihbboxapi.herokuapp.com/data?lat=" + latit + "&&long=" + longit + "&&limit=500",
+        endpoint: "https://kitsihbboxapi.herokuapp.com/data?lat=" + latit + "&&long=" + longit + "&&limit=500",
         pointToLayer: onPoint,
         afterFetch,
         filter: (feature) => {
