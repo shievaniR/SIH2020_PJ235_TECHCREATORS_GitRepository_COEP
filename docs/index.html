@@ -154,7 +154,7 @@
         }).addTo(map);
         map.addLayer(clusters);
 
-        $.getJSON("http://kitsihbboxapi.herokuapp.com/data?lat=" + result.location.y + "&&long=" + result.location.x + "&&limit=5", function (data) {
+        $.getJSON("https://kitsihbboxapi.herokuapp.com/data?lat=" + result.location.y + "&&long=" + result.location.x + "&&limit=5", function (data) {
           console.log(data)
           var circlelayer = L.geoJSON(data, {
             pointToLayer: onPoint1,
