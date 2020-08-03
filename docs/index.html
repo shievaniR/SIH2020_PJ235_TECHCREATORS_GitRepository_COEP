@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Simple FeatureLayer</title>
+  <title>SIH2020_PJ235_TECHCREATORS_GitRepository_COEP</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
 
   <!-- Load Leaflet from CDN -->
@@ -17,9 +17,12 @@
     crossorigin=""></script>
   <script src="js/leaflet.markercluster.js"></script>
   <script src="js/Leaflet.Control.Custom.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc="
+    crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geosearch/3.0.6/bundle.min.js"></script>
+  <script src="js/uGeoJSON.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet.geodesic"></script>
+
   <style>
     body {
       margin: 0;
@@ -44,6 +47,21 @@
       right: 0;
       left: 0;
     }
+
+    .info {
+      padding: 6px 8px;
+      font: 14px/16px Arial, Helvetica, sans-serif;
+      background: white;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+    }
+
+    .info h4 {
+      margin: 0 0 5px;
+      font: 22px/24px Arial, Helvetica, sans-serif;
+      color: #777;
+    }
   </style>
 </head>
 
@@ -52,6 +70,9 @@
   <div id="map"> </div>
 
   <script>
+
+    // Getting geolocation - Start //
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function (position) {
         console.log('--- Your Position: ---');
@@ -65,29 +86,22 @@
 
       })
     }
+    // Getting geolocation - End //
     function addmap(latit, longit) {
-
       var map = L.map('map');
       map.setZoom(18)
-      /* map.fitBounds([
-         [28.798466742681587, 76.11983078002931],
-         [28.808466742681587, 76.12983078002911]
-       ]);*/
       console.log('Lat: ' + latit);
-      map.setView([latit, longit], 17);
+      map.setView([latit, longit], 15);
       var di = new L.LatLng(latit, longit);
-      var drag = new L.LatLng(latit + 0.001000000000000000, longit + 0.001000000000000000);
-      var geoIcon = new L.Icon({
-              iconSize: [37, 37],
-              iconAnchor: [13, 27],
-              popupAnchor: [1, -24],
-              iconUrl: 'icons/geo.png'
-            });
-      var A = L.marker(di, { draggable: true,icon: geoIcon }).bindTooltip('Hi There!').addTo(map);
+
+      var centerpoint = L.marker(di, { draggable: true }).bindTooltip('Hi There!');
+      centerpoint.addTo(map)
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 
+
+      // Search control - start // 
       var GeoSearchControl = window.GeoSearch.GeoSearchControl;
       var OpenStreetMapProvider = window.GeoSearch.OpenStreetMapProvider;
       var provider = new OpenStreetMapProvider({
@@ -96,7 +110,6 @@
         },
       });
 
-      //  Define search controls
       var searchControl = new GeoSearchControl({
         provider: provider,
         retainZoomLevel: true,
@@ -108,107 +121,112 @@
         keepResult: true,
       });
 
-      // Add searchbar to the map
+
       map.addControl(searchControl);
-   //   var clusters = L.markerClusterGroup()
-   let coverage = L.layerGroup()
+
+      map.on('geosearch/showlocation', (result) => {
+
+        di = new L.LatLng(result.location.y, result.location.x);
+        map.setView(di, 15);
+        GBM.clearLayers();
+        RTP.clearLayers();
+        LPBTS.clearLayers();
+        COWGBT.clearLayers();
+        GBT.clearLayers();
+        Wallmount.clearLayers();
+        RTT.clearLayers();
+        nearest.clearLayers();
+        map.removeLayer(centerpoint);
+
+        centerpoint = L.marker(di, { draggable: true }).bindTooltip('Hi There!');
+        clusters.clearLayers();
+        centerpoint.addTo(map)
+        L.uGeoJSONLayer({
+          endpoint: "http://kitsihbboxapi.herokuapp.com/data?lat=" + result.location.y + "&&long=" + result.location.x + "&&limit=500",
+          pointToLayer: onPoint,
+          afterFetch,
+          minZoom: 40,
+          filter: (feature) => {
+            const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.Sitetype)
+            return isEventTypeChecked
+          }
+
+        }).addTo(map);
+        map.addLayer(clusters);
+
+        $.getJSON("http://kitsihbboxapi.herokuapp.com/data?lat=" + result.location.y + "&&long=" + result.location.x + "&&limit=5", function (data) {
+          console.log(data)
+          var circlelayer = L.geoJSON(data, {
+            pointToLayer: onPoint1,
+          })
+          //   circlelayer.addTo(map)
+        })
+
+        map.addLayer(nearest)
+        centerpoint.on('dragend', onDrag);
+      });
+
+      // Search control - End // 
+      var clusters = L.markerClusterGroup()
       var myData;
 
       function onPoint(geoJsonPoint, latlng) {
-        console.log("pomt")
-
-
-        /*  if (geoJsonPoint.properties.Sitetype == 'GBM') {
-            console.log("eee")
-            var smallIcon = new L.Icon({
-              iconSize: [27, 27],
-              iconAnchor: [13, 27],
-              popupAnchor: [1, -24],
-              iconUrl: 'icons/GSMtower.png'
-            });
-          }
-    
-          if (geoJsonPoint.properties.Sitetype == 'GBT') {
-            var smallIcon = new L.Icon({
-              iconSize: [27, 27],
-              iconAnchor: [13, 27],
-              popupAnchor: [1, -24],
-              iconUrl: 'icons/UMTStower.png'
-            });
-          }
-    
-          if (geoJsonPoint.properties.Sitetype == 'RTP') {
-            var smallIcon = new L.Icon({
-              iconSize: [27, 27],
-              iconAnchor: [13, 27],
-              popupAnchor: [1, -24],
-              iconUrl: 'icons/LTEradiotower.png'
-            });
-          } else {
-    
-            var smallIcon = new L.Icon({
-              iconSize: [27, 27],
-              iconAnchor: [13, 27],
-              popupAnchor: [1, -24],
-              iconUrl: 'icons/LTEradiotower.png'
-            });
-    
-          }*/
-
-        // var marker = L.marker(latlng, { icon: smallIcon })
-        var marker = L.marker(latlng)
-     
-        if (geoJsonPoint.properties.Sitetype == 'GBM' || geoJsonPoint.properties.Sitetype == 'LPBTS') {
-          const geodesiccircle = new L.GeodesicCircle(latlng, {
-          radius: 1*1000,  // 3000km in meters
-        });
-        coverage.addLayer(geodesiccircle)
-        }
-
-        if (geoJsonPoint.properties.Sitetype == 'COW(GBT)' || geoJsonPoint.properties.Sitetype == 'RTP' || geoJsonPoint.properties.Sitetype == 'Wall mount') {
-          const geodesiccircle = new L.GeodesicCircle(latlng, {
-          radius: 2*1000,  // 3000km in meters
-        });
-        coverage.addLayer(geodesiccircle)
-        }
-
-        if (geoJsonPoint.properties.Sitetype == 'GBT') {
-          const geodesiccircle = new L.GeodesicCircle(latlng, {
-          radius: 4*1000,  // 3000km in meters
-        });
-        coverage.addLayer(geodesiccircle)
-        }
-
-        if (geoJsonPoint.properties.Sitetype == 'LPBTS') {
-          const geodesiccircle = new L.GeodesicCircle(latlng, {
-          radius: 1*1000,  // 3000km in meters
-        });
-        coverage.addLayer(geodesiccircle)
-        }
-
+        //     console.log("in on point")
+        //   console.log(geoJsonPoint.properties)
         if (geoJsonPoint.properties.Sitetype == 'RTT') {
-          const geodesiccircle = new L.GeodesicCircle(latlng, {
-          radius: 3*1000,  // 3000km in meters
-        });
-        coverage.addLayer(geodesiccircle)
+          var smallIcon = new L.Icon({
+            iconSize: [27, 27],
+            iconAnchor: [13, 27],
+            popupAnchor: [1, -24],
+            iconUrl: 'icons/GSMtower.png'
+          });
         }
 
-        
+        if (geoJsonPoint.properties.Sitetype == 'RTP') {
+          var smallIcon = new L.Icon({
+            iconSize: [27, 27],
+            iconAnchor: [13, 27],
+            popupAnchor: [1, -24],
+            iconUrl: 'icons/UMTStower.png'
+          });
+        }
+
+        if (geoJsonPoint.properties.Sitetype == 'GBM') {
+          var smallIcon = new L.Icon({
+            iconSize: [27, 27],
+            iconAnchor: [13, 27],
+            popupAnchor: [1, -24],
+            iconUrl: 'icons/LTEradiotower.png'
+          });
+        } else {
+          var smallIcon = new L.Icon({
+            iconSize: [27, 27],
+            iconAnchor: [13, 27],
+            popupAnchor: [1, -24],
+            iconUrl: 'icons/LTEradiotower.png'
+          });
+        }
+
+        var marker = L.marker(latlng, { icon: smallIcon })
+        clusters.addLayer(marker);
         marker.bindPopup("LSA : " + geoJsonPoint.properties.LSA + "<br/>SiteType : " + geoJsonPoint.properties.Sitetype + "<br/>District : " + geoJsonPoint.properties.District);
-        //clusters.addLayer(marker);
-        return marker;
+        //   return marker
       }
 
 
 
 
 
-      /*  var afterFetch = function (data) {
-          clusters.clearLayers()
-         
-          myData = data;
-    
-        }*/
+      var afterFetch = function (data) {
+        //    console.log(data)
+
+        clusters.clearLayers()
+        //  var gj = L.geoJson(data);
+        //    var nearest = leafletKnn(gj).nearest(L.latLng(latit, longit), 5); 
+        //    console.log(nearest)
+        myData = data;
+
+      }
 
 
       function updateCheckboxStates() {
@@ -228,72 +246,212 @@
       }
       let checkboxStates
 
-      $.getJSON("https://kitsihbboxapi.herokuapp.com/data?lat=" + latit + "&&long=" + longit, function (data) {
-        // Define the geojson layer and add it to the map
-        myData = data;
-        console.log(myData)
-        L.geoJSON(data, {
-          pointToLayer: onPoint,
-          filter: (feature) => {
-            const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.Sitetype)
-            return isEventTypeChecked
-          }
-        }).addTo(map);
-      });
-      var button=0;
-      
-      L.control.custom({
-    position: 'topright',
-    content: '<div class="inputs" id="event-types">' +
-      '<button type="button">Coverage</button>'+
-      '</div>',
-      style   :
-    {
-        margin: '10px',
-        padding: '0px 0 0 0',
-        cursor: 'pointer',
-    },
-    datas   :
-    {
-        'foo': 'bar',
-    },
-    events:
-    {
-        click: function(data)
-        {
-          console.log("function called")
-          console.log(button)
-          if(button==0)
-          {
-           
-            coverage.addTo(map)
-            button=1;
-          }else
-          {
-            map.removeLayer(coverage)
-            button=0
-          }
-          
+      console.log("in get data")
+      L.uGeoJSONLayer({
+        endpoint: "http://kitsihbboxapi.herokuapp.com/data?lat=" + latit + "&&long=" + longit + "&&limit=500",
+        pointToLayer: onPoint,
+        afterFetch,
+        filter: (feature) => {
+          const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.Sitetype)
+          return isEventTypeChecked
+        }
+
+      }).addTo(map);
+
+
+      var GBM = L.layerGroup()
+      var LPBTS = L.layerGroup()
+      var COWGBT = L.layerGroup()
+      var RTP = L.layerGroup()
+      var GBT = L.layerGroup()
+      var RTT = L.layerGroup()
+      var Wallmount = L.layerGroup()
+      var nearest = L.layerGroup()
+
+      var towercount = 0;
+      function onPoint1(geoJsonPoint, latlng) {
+
+        console.log("On point 1")
+        var smallIcon = new L.Icon({
+          iconSize: [27, 27],
+          iconAnchor: [13, 27],
+          popupAnchor: [1, -24],
+          iconUrl: 'icons/high.png'
+        })
+
+        var marker = L.marker(latlng, { icon: smallIcon })
+        nearest.addLayer(marker)
+
+
+
+
+
+
+
+
+        if (geoJsonPoint.properties.Sitetype == 'GBM') {
+
+
+          var gbmcircle = L.circle(latlng, { radius: 1 * 1000, fill: false });
+          GBM.addLayer(gbmcircle)
+        }
+
+        if (geoJsonPoint.properties.Sitetype == 'COW(GBT)') {
+          var geodesiccircle = new L.GeodesicCircle(latlng, {
+            radius: 2 * 1000,
+            color: "#F4D03F"
+          });
+          //  COWGBT.addLayer(geodesiccircle)
+          var gbmcircle = L.circle(latlng, { radius: 2 * 1000, color: "#F4D03F", fill: false });
+
+          // GBM.addLayer(geodesiccircle)
+          COWGBT.addLayer(gbmcircle)
+        }
+
+        if (geoJsonPoint.properties.Sitetype == 'RTP') {
+          var geodesiccircle = new L.GeodesicCircle(latlng, {
+            radius: 2 * 1000,
+            color: "#CD6155",
+            fill: false,
+          });
+          //     RTP.addLayer(geodesiccircle)
+          var gbmcircle = L.circle(latlng, { radius: 2 * 1000, color: "#CD6155", fill: false });
+
+          // GBM.addLayer(geodesiccircle)
+          RTP.addLayer(gbmcircle)
+        }
+
+        if (geoJsonPoint.properties.Sitetype == 'Wall mount') {
+          var geodesiccircle = new L.GeodesicCircle(latlng, {
+            radius: 2 * 1000,
+            color: "#AF7AC5"
+          });
+
+          var gbmcircle = L.circle(latlng, { radius: 2 * 1000, color: "#EF7AC5", fill: false });
+          Wallmount.addLayer(gbmcircle)
 
         }
-    }
-  
-  }).addTo(map);
 
- //     map.addLayer(clusters);
+        if (geoJsonPoint.properties.Sitetype == 'GBT') {
+          var geodesiccircle = new L.GeodesicCircle(latlng, {
+            radius: 4 * 1000,
+            color: "#AF7AC5"
+          });
+          var gbmcircle = L.circle(latlng, { radius: 4 * 1000, color: "#AF7AC5", fill: false });
+          GBT.addLayer(gbmcircle)
+        }
+
+        if (geoJsonPoint.properties.Sitetype == 'LPBTS') {
+          var geodesiccircle = new L.GeodesicCircle(latlng, {
+            radius: 1 * 1000,
+            color: "#F4D03F"
+          });
+          var gbmcircle = L.circle(latlng, { radius: 1 * 1000, color: "#F4D03F", fill: false });
+          LPBTS.addLayer(gbmcircle)
+        }
+
+        if (geoJsonPoint.properties.Sitetype == 'RTT') {
+          var geodesiccircle = new L.GeodesicCircle(latlng, {
+            radius: 3 * 1000,
+            color: "#5D6D7E"
+          });
+          //     RTT.addLayer(geodesiccircle)
+          var gbmcircle = L.circle(latlng, { color: "#5D6", fill: false, radius: 3 * 1000 });
+
+          // GBM.addLayer(geodesiccircle)
+          RTT.addLayer(gbmcircle)
+        }
+
+
+        // marker.bindPopup("LSA : " + geoJsonPoint.properties.LSA + "<br/>SiteType : " + geoJsonPoint.properties.Sitetype + "<br/>District : " + geoJsonPoint.properties.District);
+        //clusters.addLayer(marker);
+        return marker;
+      }
+
+      $.getJSON("http://kitsihbboxapi.herokuapp.com/data?lat=" + latit + "&&long=" + longit + "&&limit=5", function (data) {
+        console.log(data)
+        var circlelayer = L.geoJSON(data, {
+          pointToLayer: onPoint1,
+        })
+        //   circlelayer.addTo(map)
+      })
+
+
+      var button = 0
       L.control.custom({
         position: 'topright',
         content: '<div class="inputs" id="event-types">' +
-          '<input type="checkbox" class="event-type" name="GBM" value="GBM" checked="true">' +
-          '<label for="funfair">GBM</label>' +
-          '<input type="checkbox" class="event-type" name="GBT" value="GBT" checked="true">' +
-          '<label for="trade">GBT</label>' +
-          '<input type="checkbox" class="event-type" name="RTP" value="RTP" checked="true">' +
+          '<button type="button">Coverage</button>' +
+          '</div>',
+        style:
+        {
+          margin: '10px',
+          padding: '0px 0 0 0',
+          cursor: 'pointer',
+        },
+        datas:
+        {
+          'foo': 'bar',
+        },
+        events:
+        {
+          click: function (data) {
+            console.log("function called")
+            console.log(button)
+            if (button == 0) {
+
+              GBM.addTo(map)
+              LPBTS.addTo(map)
+              COWGBT.addTo(map)
+              RTP.addTo(map)
+              GBT.addTo(map)
+              RTT.addTo(map)
+              Wallmount.addTo(map)
+
+              button = 1;
+            } else {
+              map.removeLayer(GBM)
+              map.removeLayer(LPBTS)
+              map.removeLayer(COWGBT)
+              map.removeLayer(RTP)
+              map.removeLayer(GBT)
+              map.removeLayer(RTT)
+              map.removeLayer(Wallmount)
+              button = 0
+            }
+
+
+          }
+        }
+
+      }).addTo(map);
+
+
+
+
+
+
+
+      map.addLayer(clusters);
+      map.addLayer(nearest);
+
+      L.control.custom({
+        position: 'bottomright',
+        content: '<div class="inputs" id="event-types">' +
+          '<input id="RTT" type="checkbox" class="event-type" name="RTT" value="RTT" checked="true">' +
+          '<label for="funfair">RTT</label>' +
+          '<input id="RTP" type="checkbox" class="event-type" name="RTP" value="RTP" checked="true">' +
           '<label for="trade">RTP</label>' +
-          '<input type="checkbox" class="event-type" name="RTT" value="RTT" checked="true">' +
-          '<label for="trade">RTT</label>' +
-          '<input type="checkbox" class="event-type" name="LPBTS" value="LPBTS" checked="true">' +
+          '<input id="GBM" type="checkbox" class="event-type" name="GBM" value="GBM" checked="true">' +
+          '<label for="trade">GBM</label>' +
+          '<input id="GBT" type="checkbox" class="event-type" name="GBT" value="GBT" checked="true">' +
+          '<label for="trade">GBT</label>' +
+          '<input id="LPBTS" type="checkbox" class="event-type" name="LPBTS" value="LPBTS" checked="true">' +
           '<label for="trade">LPBTS</label>' +
+          '<input id="COWGBT" type="checkbox" class="event-type" name="COWGBT" value="COWGBT" checked="true">' +
+          '<label for="trade">COWGBT</label>' +
+          '<input id="Wallmount" type="checkbox" class="event-type" name="Wallmount" value="Wallmount" checked="true">' +
+          '<label for="trade">Wallmount</label>' +
           '</div>',
 
         style:
@@ -308,15 +466,9 @@
             for (let input of document.querySelectorAll('input')) {
               //Listen to 'change' event of all inputs
               input.onchange = (e) => {
-               // clusters.clearLayers()
-               map.eachLayer(function(layer) {
-  if (!!layer.toGeoJSON) {
-    map.removeLayer(layer);
-  }
-});
+                clusters.clearLayers()
                 updateCheckboxStates()
                 //  clusters.addData(myData) 
-              
                 var a = L.geoJSON(myData, {
                   pointToLayer: onPoint,
                   filter: (feature) => {
@@ -324,7 +476,7 @@
                     return isEventTypeChecked
                   }
                 }).addTo(map);
-              //  map.addLayer(clusters);
+                map.addLayer(clusters);
               }
 
 
@@ -339,131 +491,164 @@
 
       updateCheckboxStates();
 
-      map.on('geosearch/showlocation', (result) => {
-        console.log("geosearch location")
-        console.log(result.location.x)
-   //     clusters.clearLayers();
-        map.setView([result.location.y, result.location.x], 17);
-        $.getJSON("https://kitsihbboxapi.herokuapp.com/data?lat=" + result.location.y + "&&long=" + result.location.x, function (data) {
-          // Define the geojson layer and add it to the map
-          myData = data;
-          console.log(myData)
+
+
+
+      function onMapClick(e) {
+        GBM.clearLayers();
+        RTP.clearLayers();
+        LPBTS.clearLayers();
+        COWGBT.clearLayers();
+        GBT.clearLayers();
+        Wallmount.clearLayers();
+        RTT.clearLayers();
+        nearest.clearLayers();
+        map.removeLayer(centerpoint);
+        centerpoint = L.marker(e.latlng, { draggable: true }).bindTooltip('Hi There!').addTo(map);
+        $.getJSON("http://kitsihbboxapi.herokuapp.com/data?lat=" + e.latlng.lat + "&&long=" + e.latlng.lng + "&&limit=5", function (data) {
+          console.log(data)
           L.geoJSON(data, {
-            pointToLayer: onPoint,
-            filter: (feature) => {
-              const isEventTypeChecked = checkboxStates.eventTypes.includes(feature.properties.Sitetype)
-              return isEventTypeChecked
-            }
-          }).addTo(map);
-        });
+            pointToLayer: onPoint1,
+          })
+        })
 
-      //  map.addLayer(clusters);
+      }
+
+
+      function onDrag(e) {
+        console.log("calling drag")
+        GBM.clearLayers();
+        RTP.clearLayers();
+        LPBTS.clearLayers();
+        COWGBT.clearLayers();
+        GBT.clearLayers();
+        Wallmount.clearLayers();
+        RTT.clearLayers();
+        nearest.clearLayers();
+        map.removeLayer(centerpoint);
+
+        centerpoint = L.marker([centerpoint.getLatLng().lat, centerpoint.getLatLng().lng], { draggable: true }).bindTooltip('Hi There!')
+        centerpoint.addTo(map)
+        $.getJSON("http://kitsihbboxapi.herokuapp.com/data?lat=" + centerpoint.getLatLng().lat + "&&long=" + centerpoint.getLatLng().lng + "&&limit=5", function (data) {
+          console.log(data)
+          L.geoJSON(data, {
+            pointToLayer: onPoint1,
+          })
+        })
+        map.addLayer(nearest)
+        centerpoint.on('dragend', onDrag);
+      }
+
+
+      map.on('click', onMapClick);
+      centerpoint.on('dragend', onDrag);
+
+      $('#GBM').change(function () {
+        const $checkbox = $(this);
+        if (!$checkbox.is(':checked')) {
+          if (button == 1) {
+            map.removeLayer(GBM)
+          }
+        }
+        if ($checkbox.is(':checked')) {
+          if (button == 1) {
+            GBM.addTo(map)
+          }
+        }
       });
-$('#GBM').change(function () {
-    const $checkbox = $(this);
-    if (!$checkbox.is(':checked')) {
-      if (button == 1) {
-        map.removeLayer(GBM)
-      }
-    }
-    if ($checkbox.is(':checked')) {
-      if (button == 1) {
-        GBM.addTo(map)
-      }
-    }
-  });
 
-  $('#LPBTS').change(function () {
-    const $checkbox = $(this);
-    if (!$checkbox.is(':checked')) {
-      if (button == 1) {
-        map.removeLayer(LPBTS)
-      }
-    }
-    if ($checkbox.is(':checked')) {
-      if (button == 1) {
-        LPBTS.addTo(map)
-      }
-    }
-  });
+      $('#LPBTS').change(function () {
+        const $checkbox = $(this);
+        if (!$checkbox.is(':checked')) {
+          if (button == 1) {
+            map.removeLayer(LPBTS)
+          }
+        }
+        if ($checkbox.is(':checked')) {
+          if (button == 1) {
+            LPBTS.addTo(map)
+          }
+        }
+      });
 
-  $('#COWGBT').change(function () {
-    const $checkbox = $(this);
-    if (!$checkbox.is(':checked')) {
-      if (button == 1) {
-        map.removeLayer(COWGBT)
-      }
-    }
-    if ($checkbox.is(':checked')) {
-      if (button == 1) {
-        COWGBT.addTo(map)
-      }
-    }
-  });
+      $('#COWGBT').change(function () {
+        const $checkbox = $(this);
+        if (!$checkbox.is(':checked')) {
+          if (button == 1) {
+            map.removeLayer(COWGBT)
+          }
+        }
+        if ($checkbox.is(':checked')) {
+          if (button == 1) {
+            COWGBT.addTo(map)
+          }
+        }
+      });
 
 
-  $('#RTP').change(function () {
-    const $checkbox = $(this);
-    if (!$checkbox.is(':checked')) {
-      if (button == 1) {
-        map.removeLayer(RTP)
-      }
-    }
-    if ($checkbox.is(':checked')) {
-      if (button == 1) {
-        RTP.addTo(map)
-      }
-    }
-  });
+      $('#RTP').change(function () {
+        const $checkbox = $(this);
+        if (!$checkbox.is(':checked')) {
+          if (button == 1) {
+            map.removeLayer(RTP)
+          }
+        }
+        if ($checkbox.is(':checked')) {
+          if (button == 1) {
+            RTP.addTo(map)
+          }
+        }
+      });
 
 
-  $('#GBT').change(function () {
-    const $checkbox = $(this);
-    if (!$checkbox.is(':checked')) {
-      if (button == 1) {
-        map.removeLayer(GBT)
-      }
-    }
-    if ($checkbox.is(':checked')) {
-      if (button == 1) {
-        GBT.addTo(map)
-      }
-    }
-  });
+      $('#GBT').change(function () {
+        const $checkbox = $(this);
+        if (!$checkbox.is(':checked')) {
+          if (button == 1) {
+            map.removeLayer(GBT)
+          }
+        }
+        if ($checkbox.is(':checked')) {
+          if (button == 1) {
+            GBT.addTo(map)
+          }
+        }
+      });
 
-  $('#RTT').change(function () {
-    const $checkbox = $(this);
-    if (!$checkbox.is(':checked')) {
-      if (button == 1) {
-        map.removeLayer(RTT)
-      }
-    }
-    if ($checkbox.is(':checked')) {
-      if (button == 1) {
-        RTT.addTo(map)
-      }
-    }
-  });
+      $('#RTT').change(function () {
+        const $checkbox = $(this);
+        if (!$checkbox.is(':checked')) {
+          if (button == 1) {
+            map.removeLayer(RTT)
+          }
+        }
+        if ($checkbox.is(':checked')) {
+          if (button == 1) {
+            RTT.addTo(map)
+          }
+        }
+      });
 
-  $('#Wallmount').change(function () {
-    const $checkbox = $(this);
-    if (!$checkbox.is(':checked')) {
-      if (button == 1) {
-        map.removeLayer(Wallmount)
-      }
-    }
-    if ($checkbox.is(':checked')) {
-      if (button == 1) {
-        Wallmount.addTo(map)
-      }
-    }
-  });
+      $('#Wallmount').change(function () {
+        const $checkbox = $(this);
+        if (!$checkbox.is(':checked')) {
+          if (button == 1) {
+            map.removeLayer(Wallmount)
+          }
+        }
+        if ($checkbox.is(':checked')) {
+          if (button == 1) {
+            Wallmount.addTo(map)
+          }
+        }
+      });
+
+
 
 
     }
-
   </script>
-
+ 
 </body>
 
 </html>
