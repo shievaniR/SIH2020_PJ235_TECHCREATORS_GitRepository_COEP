@@ -12,6 +12,7 @@
     crossorigin="" />
   <link rel="stylesheet" href="css/MarkerCluster.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geosearch/3.0.6/geosearch.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
     integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
     crossorigin=""></script>
@@ -22,6 +23,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geosearch/3.0.6/bundle.min.js"></script>
   <script src="js/uGeoJSON.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet.geodesic"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
   <style>
     body {
@@ -126,7 +128,7 @@
 
       map.on('geosearch/showlocation', (result) => {
         towercount=0;
-        t="LSA       District        Sitetype";
+        t="Nearby Towers are \n \n LSA       District        Sitetype\n";
         di = new L.LatLng(result.location.y, result.location.x);
         map.setView(di, 15);
         GBM.clearLayers();
@@ -269,8 +271,8 @@
       var Wallmount = L.layerGroup()
       var nearest = L.layerGroup()
 
-      var towercount = 0;
-      var t="LSA       District        Sitetype";
+      var towercount = 0;t
+      var t="Nearby Towers are \n \n LSA       District        Sitetype\n";
       function onPoint1(geoJsonPoint, latlng) {
 
        
@@ -330,10 +332,18 @@
         towercount++
         }
        
-
+       
         var marker = L.marker(latlng, { icon: smallIcon })
         nearest.addLayer(marker)
-
+        //var polyline = L.polyline(latlng, {color: 'red'})
+        //nearest.addLayer(polyline)
+        //map.fitBounds(polyline.getBounds());
+ /*       L.Routing.control({
+  waypoints: [
+   di,
+    latlng
+  ]
+}).addTo(map);*/
 
      
 
@@ -428,7 +438,7 @@
         //   circlelayer.addTo(map)
       })
 
-
+      
       var button = 0
       L.control.custom({
         position: 'topright',
@@ -551,7 +561,7 @@
 
       function onMapClick(e) {
         towercount=0;
-        t="LSA       District        Sitetype";
+        t="Nearby Towers are \n \n LSA       District        Sitetype\n";
         GBM.clearLayers();
         RTP.clearLayers();
         LPBTS.clearLayers();
@@ -567,6 +577,7 @@
           L.geoJSON(data, {
             pointToLayer: onPoint1,
           })
+          alert(t)
         })
         centerpoint.on('dragend', onDrag);
       }
@@ -575,7 +586,7 @@
       function onDrag(e) {
         console.log("calling drag")
         towercount=0;
-        t="LSA       District        Sitetype";
+        t="Nearby Towers are \n \n LSA       District        Sitetype\n";
         GBM.clearLayers();
         RTP.clearLayers();
         LPBTS.clearLayers();
@@ -593,6 +604,7 @@
           L.geoJSON(data, {
             pointToLayer: onPoint1,
           })
+          alert(t)
         })
         map.addLayer(nearest)
         centerpoint.on('dragend', onDrag);
