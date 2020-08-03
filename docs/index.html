@@ -368,7 +368,7 @@
         return marker;
       }
 
-      $.getJSON("http://kitsihbboxapi.herokuapp.com/data?lat=" + latit + "&&long=" + longit + "&&limit=5", function (data) {
+      $.getJSON("https://kitsihbboxapi.herokuapp.com/data?lat=" + latit + "&&long=" + longit + "&&limit=5", function (data) {
         console.log(data)
         var circlelayer = L.geoJSON(data, {
           pointToLayer: onPoint1,
@@ -505,7 +505,7 @@
         nearest.clearLayers();
         map.removeLayer(centerpoint);
         centerpoint = L.marker(e.latlng, { draggable: true }).bindTooltip('Hi There!').addTo(map);
-        $.getJSON("http://kitsihbboxapi.herokuapp.com/data?lat=" + e.latlng.lat + "&&long=" + e.latlng.lng + "&&limit=5", function (data) {
+        $.getJSON("https://kitsihbboxapi.herokuapp.com/data?lat=" + e.latlng.lat + "&&long=" + e.latlng.lng + "&&limit=5", function (data) {
           console.log(data)
           L.geoJSON(data, {
             pointToLayer: onPoint1,
@@ -529,7 +529,7 @@
 
         centerpoint = L.marker([centerpoint.getLatLng().lat, centerpoint.getLatLng().lng], { draggable: true }).bindTooltip('Hi There!')
         centerpoint.addTo(map)
-        $.getJSON("http://kitsihbboxapi.herokuapp.com/data?lat=" + centerpoint.getLatLng().lat + "&&long=" + centerpoint.getLatLng().lng + "&&limit=5", function (data) {
+        $.getJSON("https://kitsihbboxapi.herokuapp.com/data?lat=" + centerpoint.getLatLng().lat + "&&long=" + centerpoint.getLatLng().lng + "&&limit=5", function (data) {
           console.log(data)
           L.geoJSON(data, {
             pointToLayer: onPoint1,
