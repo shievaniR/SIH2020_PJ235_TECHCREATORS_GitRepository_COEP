@@ -359,6 +359,105 @@
 
       //  map.addLayer(clusters);
       });
+$('#GBM').change(function () {
+    const $checkbox = $(this);
+    if (!$checkbox.is(':checked')) {
+      if (button == 1) {
+        map.removeLayer(GBM)
+      }
+    }
+    if ($checkbox.is(':checked')) {
+      if (button == 1) {
+        GBM.addTo(map)
+      }
+    }
+  });
+
+  $('#LPBTS').change(function () {
+    const $checkbox = $(this);
+    if (!$checkbox.is(':checked')) {
+      if (button == 1) {
+        map.removeLayer(LPBTS)
+      }
+    }
+    if ($checkbox.is(':checked')) {
+      if (button == 1) {
+        LPBTS.addTo(map)
+      }
+    }
+  });
+
+  $('#COWGBT').change(function () {
+    const $checkbox = $(this);
+    if (!$checkbox.is(':checked')) {
+      if (button == 1) {
+        map.removeLayer(COWGBT)
+      }
+    }
+    if ($checkbox.is(':checked')) {
+      if (button == 1) {
+        COWGBT.addTo(map)
+      }
+    }
+  });
+
+
+  $('#RTP').change(function () {
+    const $checkbox = $(this);
+    if (!$checkbox.is(':checked')) {
+      if (button == 1) {
+        map.removeLayer(RTP)
+      }
+    }
+    if ($checkbox.is(':checked')) {
+      if (button == 1) {
+        RTP.addTo(map)
+      }
+    }
+  });
+
+
+  $('#GBT').change(function () {
+    const $checkbox = $(this);
+    if (!$checkbox.is(':checked')) {
+      if (button == 1) {
+        map.removeLayer(GBT)
+      }
+    }
+    if ($checkbox.is(':checked')) {
+      if (button == 1) {
+        GBT.addTo(map)
+      }
+    }
+  });
+
+  $('#RTT').change(function () {
+    const $checkbox = $(this);
+    if (!$checkbox.is(':checked')) {
+      if (button == 1) {
+        map.removeLayer(RTT)
+      }
+    }
+    if ($checkbox.is(':checked')) {
+      if (button == 1) {
+        RTT.addTo(map)
+      }
+    }
+  });
+
+  $('#Wallmount').change(function () {
+    const $checkbox = $(this);
+    if (!$checkbox.is(':checked')) {
+      if (button == 1) {
+        map.removeLayer(Wallmount)
+      }
+    }
+    if ($checkbox.is(':checked')) {
+      if (button == 1) {
+        Wallmount.addTo(map)
+      }
+    }
+  });
 
 
     }
